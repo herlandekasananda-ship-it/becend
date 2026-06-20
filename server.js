@@ -1,4 +1,4 @@
-// server.js (Backend khusus Socket.io + Lowdb - Versi Lengkap dengan Admin CS)
+// server.js (Backend khusus Socket.io + Lowdb - Versi Final Anti-Crash Render)
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -23,18 +23,21 @@ const io = new Server(httpServer, {
   }
 });
 
-// 🚀 1. STRATEGI RE-ROUTING STORAGE FILE UNTUK VERCEL / RENDER
+// 🚀 1. STRATEGI STORAGE FILE UNTUK RENDER PERSISTENT DISK
 const IS_RENDER = process.env.RENDER === 'true';
 const STORAGE_DIR = IS_RENDER ? '/data' : process.cwd();
 const dbPath = path.join(STORAGE_DIR, 'db.json');
 
-// 🎯 Bagian fs.mkdirSync yang memicu eror izin akses (EACCES) sudah dihapus dari sini 
-// karena Render otomatis menyiapkan folder /data saat fitur 'Disk' diaktifkan.
-
-// Cetakan skema data awal untuk database lowdb Anda
 const defaultData = { chats: [] };
 
-// Inisialisasi Lowdb secara asynchronous (v3 style menggunakan JSONFilePreset)
+// 🎯 SOLUSI BAD GATEWAY & EACCES: 
+// Membuat file db.json kosongan secara instan via fs.writeFileSync jika belum ada di persistent disk.
+// Kita tidak menggunakan fs.mkdirSync karena folder '/data' sudah otomatis dikelola oleh Render Disk.
+if (!fs.existsSync(dbPath)) {
+  fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2), 'utf-8');
+}
+
+// Inisialisasi Lowdb setelah file dipastikan aman berada di sistem
 const db = await JSONFilePreset(dbPath, defaultData);
 
 // Variabel global untuk menyimpan Socket ID milik admin yang sedang online
@@ -88,7 +91,7 @@ io.on('connection', async (socket) => {
   }
 
   // ----------------------------------------------------------------------
-  // B. JIKA YANG TERHUBUNG ADALAH USER BISA / PELANGGAN
+  // B. JIKA YANG TERHUBUNG ADALAH USER BIASA / PELANGGAN
   // ----------------------------------------------------------------------
   if (username && role !== 'agent') {
     await db.read(); // Baca data terbaru dari file disk
