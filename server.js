@@ -1,4 +1,4 @@
-// server.js (Backend khusus Socket.io + Lowdb - Versi Final Anti-Crash Render)
+// server.js (Backend khusus Socket.io + Lowdb - Versi Final Render Paket Gratis)
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -23,21 +23,19 @@ const io = new Server(httpServer, {
   }
 });
 
-// 🚀 1. STRATEGI STORAGE FILE UNTUK RENDER PERSISTENT DISK
-const IS_RENDER = process.env.RENDER === 'true';
-const STORAGE_DIR = IS_RENDER ? '/data' : process.cwd();
+// 🚀 1. STRATEGI STORAGE FILE UNTUK RENDER PAKET GRATIS (FREE TIER)
+// Karena paket gratis tidak mendukung external Disk, kita simpan db.json langsung di folder proyek aktif.
+const STORAGE_DIR = process.cwd(); 
 const dbPath = path.join(STORAGE_DIR, 'db.json');
 
 const defaultData = { chats: [] };
 
-// 🎯 SOLUSI BAD GATEWAY & EACCES: 
-// Membuat file db.json kosongan secara instan via fs.writeFileSync jika belum ada di persistent disk.
-// Kita tidak menggunakan fs.mkdirSync karena folder '/data' sudah otomatis dikelola oleh Render Disk.
+// Buat file db.json kosongan secara instan di folder lokal jika belum ada saat start
 if (!fs.existsSync(dbPath)) {
   fs.writeFileSync(dbPath, JSON.stringify(defaultData, null, 2), 'utf-8');
 }
 
-// Inisialisasi Lowdb setelah file dipastikan aman berada di sistem
+// Inisialisasi Lowdb setelah file dipastikan aman berada di sistem internal proyek
 const db = await JSONFilePreset(dbPath, defaultData);
 
 // Variabel global untuk menyimpan Socket ID milik admin yang sedang online
