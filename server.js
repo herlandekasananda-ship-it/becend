@@ -28,10 +28,8 @@ const IS_RENDER = process.env.RENDER === 'true';
 const STORAGE_DIR = IS_RENDER ? '/data' : process.cwd();
 const dbPath = path.join(STORAGE_DIR, 'db.json');
 
-// Pastikan folder '/data' dibuat secara aman di server agar tidak crash
-if (IS_RENDER && !fs.existsSync(STORAGE_DIR)) {
-  fs.mkdirSync(STORAGE_DIR, { recursive: true });
-}
+// 🎯 Bagian fs.mkdirSync yang memicu eror izin akses (EACCES) sudah dihapus dari sini 
+// karena Render otomatis menyiapkan folder /data saat fitur 'Disk' diaktifkan.
 
 // Cetakan skema data awal untuk database lowdb Anda
 const defaultData = { chats: [] };
